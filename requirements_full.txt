@@ -12,6 +12,9 @@ mediapipe>=0.10.0
 # Numerical computing
 numpy>=1.24.0
 
+# CRITICAL: Protobuf version must be compatible with both MediaPipe and TensorFlow
+protobuf>=3.20.3,<4.0
+
 # ONNX runtime for efficient DL inference
 onnxruntime>=1.16.0
 
@@ -19,13 +22,15 @@ onnxruntime>=1.16.0
 torch>=2.0.0
 transformers>=4.30.0
 
+# TensorFlow (install before DeepFace to control version)
+tensorflow>=2.13.0,<2.16.0
+
 # DeepFace for advanced emotion detection
 deepface>=0.0.79
 
 # Utilities
 requests>=2.31.0
 
-# Note: DeepFace will automatically install tensorflow or tensorflow-cpu
-# If you encounter issues with TensorFlow, try:
-#   pip install tensorflow-cpu
-# instead of the default tensorflow package
+# Note: If you still encounter protobuf errors, try:
+#   pip uninstall protobuf -y
+#   pip install protobuf==3.20.3
