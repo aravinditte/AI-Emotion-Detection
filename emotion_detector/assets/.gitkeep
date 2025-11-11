@@ -1,0 +1,5 @@
+# Assets directory
+# This directory stores:
+# - ONNX emotion detection models (auto-downloaded)
+# - Screenshots (saved when pressing S)
+# - Other runtime assets
