@@ -49,7 +49,7 @@ def main():
     renderer = None
     
     try:
-        # Open webcam
+        # Open webcam with default settings (best quality)
         print("Initializing webcam...")
         cap = cv2.VideoCapture(0)
         
@@ -61,20 +61,10 @@ def main():
             print("  3. Camera permissions are granted")
             return 1
         
-        # Set higher resolution for better quality
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-        # Increase brightness and contrast
-        cap.set(cv2.CAP_PROP_BRIGHTNESS, 0.5)
-        cap.set(cv2.CAP_PROP_CONTRAST, 0.5)
-        # Set auto focus and exposure
-        cap.set(cv2.CAP_PROP_AUTOFOCUS, 1)
-        cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1)
+        # Don't set camera properties - use defaults for best quality
+        # This prevents overexposure and quality issues
         
-        # Get actual resolution
-        actual_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        actual_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        print(f"Webcam initialized at {actual_width}x{actual_height}")
+        print("Webcam initialized successfully")
         
         # Initialize detector with higher confidence
         print("Loading face detector...")
@@ -84,8 +74,8 @@ def main():
         # Initialize emotion analyzer (heuristic mode by default)
         print("Loading emotion analyzer...")
         analyzer = EmotionAnalyzer(mode='heuristic')
-        # Reduce smoothing for more responsive tracking
-        analyzer.bbox_lerp = 0.35  # Increased for faster tracking
+        # Use same bbox lerp as reference (0.22)
+        analyzer.bbox_lerp = 0.22
         print("Emotion analyzer loaded")
         
         # Initialize HUD renderer
@@ -118,9 +108,6 @@ def main():
         use_dl = False
         dl_backend = analyzer.dl_backend
         
-        # Create window with specific size
-        cv2.namedWindow('AI Emotion Detection', cv2.WINDOW_NORMAL)
-        
         # Main loop
         while True:
             # Read frame
@@ -134,7 +121,7 @@ def main():
             # Detect face
             bbox, landmarks = detector.detect_face(frame)
             
-            # Smooth bounding box movement with faster tracking
+            # Smooth bounding box movement
             if bbox:
                 if smoothed_bbox is None:
                     smoothed_bbox = bbox
@@ -173,8 +160,8 @@ def main():
             
             # Render HUD
             if smoothed_bbox:
-                # Draw tighter face box
-                frame = renderer.draw_face_box(frame, smoothed_bbox, glow=True, corner_radius=20)
+                # Draw face box
+                frame = renderer.draw_face_box(frame, smoothed_bbox, glow=True, corner_radius=22)
                 frame = renderer.draw_emotion_info(frame, emotion, confidence, 
                                                   persona, smoothed_bbox, alpha)
             
@@ -191,7 +178,7 @@ def main():
             
             if frame_time > 0:
                 fps = 1.0 / frame_time
-                fps_smooth = fps_smooth * 0.88 + fps * 0.12
+                fps_smooth = fps_smooth * 0.85 + fps * 0.15
             
             frame = renderer.draw_fps_counter(frame, fps_smooth)
             
@@ -227,11 +214,11 @@ def main():
                 print(f"Smoothing: {analyzer.smoothing_factor:.2f}")
             
             elif key == ord(']'):
-                analyzer.bbox_lerp = min(0.95, analyzer.bbox_lerp + 0.05)
+                analyzer.bbox_lerp = min(0.9, analyzer.bbox_lerp + 0.05)
                 print(f"BBox Lerp: {analyzer.bbox_lerp:.2f}")
             
             elif key == ord('['):
-                analyzer.bbox_lerp = max(0.05, analyzer.bbox_lerp - 0.05)
+                analyzer.bbox_lerp = max(0.02, analyzer.bbox_lerp - 0.05)
                 print(f"BBox Lerp: {analyzer.bbox_lerp:.2f}")
             
             elif key == ord('d') or key == ord('D'):
