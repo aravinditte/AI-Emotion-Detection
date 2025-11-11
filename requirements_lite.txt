@@ -1,0 +1,19 @@
+# Lightweight dependencies for AI Emotion Detection
+# Fast heuristic mode with optional ONNX support
+# Developed by Aravind
+
+# Core computer vision
+opencv-python>=4.8.0
+opencv-contrib-python>=4.8.0
+
+# Face detection
+mediapipe>=0.10.0
+
+# Numerical computing
+numpy>=1.24.0
+
+# Optional: ONNX runtime for deep learning (no TensorFlow required)
+onnxruntime>=1.16.0
+
+# Optional: For downloading models
+requests>=2.31.0

@@ -1,0 +1,31 @@
+# Full dependencies for AI Emotion Detection
+# Includes all deep learning frameworks
+# Developed by Aravind
+
+# Core computer vision
+opencv-python>=4.8.0
+opencv-contrib-python>=4.8.0
+
+# Face detection
+mediapipe>=0.10.0
+
+# Numerical computing
+numpy>=1.24.0
+
+# ONNX runtime for efficient DL inference
+onnxruntime>=1.16.0
+
+# Deep learning frameworks
+torch>=2.0.0
+transformers>=4.30.0
+
+# DeepFace for advanced emotion detection
+deepface>=0.0.79
+
+# Utilities
+requests>=2.31.0
+
+# Note: DeepFace will automatically install tensorflow or tensorflow-cpu
+# If you encounter issues with TensorFlow, try:
+#   pip install tensorflow-cpu
+# instead of the default tensorflow package
