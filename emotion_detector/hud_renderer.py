@@ -39,7 +39,7 @@ class HUDRenderer:
                       bbox: Tuple[int, int, int, int],
                       color: Tuple[int, int, int] = None,
                       thickness: int = 2,
-                      corner_radius: int = 25,
+                      corner_radius: int = 20,
                       glow: bool = True) -> np.ndarray:
         """Draw a rounded rectangle with optional glow effect.
         
@@ -62,7 +62,7 @@ class HUDRenderer:
         
         # Draw rounded rectangle components
         x1, y1, x2, y2 = x, y, x + w, y + h
-        r = corner_radius
+        r = min(corner_radius, w // 4, h // 4)  # Adaptive corner radius
         
         # Draw straight lines
         cv2.line(overlay, (x1 + r, y1), (x2 - r, y1), color, thickness)
@@ -76,13 +76,13 @@ class HUDRenderer:
         cv2.ellipse(overlay, (x1 + r, y2 - r), (r, r), 90, 0, 90, color, thickness)
         cv2.ellipse(overlay, (x2 - r, y2 - r), (r, r), 0, 0, 90, color, thickness)
         
-        # Add glow effect
+        # Add subtle glow effect (reduced intensity)
         if glow:
             glow_mask = np.zeros_like(frame)
             cv2.rectangle(glow_mask, (x1, y1), (x2, y2), color, -1)
             
-            # Multiple blur passes for glow
-            for kernel_size, alpha in [(31, 0.15), (19, 0.10), (9, 0.05)]:
+            # Lighter glow for cleaner look
+            for kernel_size, alpha in [(21, 0.08), (13, 0.05)]:
                 blurred = cv2.GaussianBlur(glow_mask, (kernel_size, kernel_size), 0)
                 frame = cv2.addWeighted(frame, 1.0, blurred, alpha, 0)
         
@@ -111,9 +111,9 @@ class HUDRenderer:
         """
         x, y, w, h = bbox
         
-        # Position above bounding box
+        # Position above bounding box with more space
         text_x = x
-        text_y = max(15, y - 15)
+        text_y = max(20, y - 18)
         
         # Create emotion text
         emotion_text = f"{emotion.upper()} ({int(confidence * 100)}%)"
@@ -126,25 +126,25 @@ class HUDRenderer:
         shadow_offset = 3
         cv2.putText(frame, emotion_text, 
                    (text_x + shadow_offset + offset_x, text_y + shadow_offset),
-                   cv2.FONT_HERSHEY_SIMPLEX, 0.75, (15, 15, 15), 4, cv2.LINE_AA)
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.7, (15, 15, 15), 4, cv2.LINE_AA)
         
         # Draw main text with color based on alpha
         text_color = self.CYAN_NEON if alpha > 0.6 else self.BLUE_NEON
         cv2.putText(frame, emotion_text,
                    (text_x + offset_x, text_y),
-                   cv2.FONT_HERSHEY_SIMPLEX, 0.75, text_color, 2, cv2.LINE_AA)
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.7, text_color, 2, cv2.LINE_AA)
         
         # Draw persona below
-        persona_y = text_y + 28
+        persona_y = text_y + 25
         cv2.putText(frame, f"[{persona}]",
                    (text_x, persona_y),
-                   cv2.FONT_HERSHEY_SIMPLEX, 0.65, self.CYAN_NEON, 1, cv2.LINE_AA)
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.6, self.CYAN_NEON, 1, cv2.LINE_AA)
         
         return frame
 
     def draw_scanline(self, frame: np.ndarray,
                      color: Tuple[int, int, int] = None,
-                     thickness: int = 3) -> np.ndarray:
+                     thickness: int = 2) -> np.ndarray:
         """Draw animated horizontal scanline.
         
         Args:
@@ -179,7 +179,7 @@ class HUDRenderer:
                 trail_color, thickness + 1)
         
         # Blend with low opacity
-        frame = cv2.addWeighted(frame, 0.88, overlay, 0.45, 0)
+        frame = cv2.addWeighted(frame, 0.92, overlay, 0.35, 0)
         return frame
 
     def draw_glitch_header(self, frame: np.ndarray,
@@ -204,17 +204,17 @@ class HUDRenderer:
         
         # Draw shadow layer
         cv2.putText(frame, text, (x - 2, y), cv2.FONT_HERSHEY_DUPLEX, 
-                   0.95, (5, 5, 5), 7, cv2.LINE_AA)
+                   0.9, (5, 5, 5), 7, cv2.LINE_AA)
         
         # Draw RGB separation glitch effect
         cv2.putText(frame, text, (x + 2, y + 2), cv2.FONT_HERSHEY_DUPLEX,
-                   0.95, (255, 50, 120), 2, cv2.LINE_AA)
+                   0.9, (255, 50, 120), 2, cv2.LINE_AA)
         cv2.putText(frame, text, (x - 2, y - 2), cv2.FONT_HERSHEY_DUPLEX,
-                   0.95, (120, 220, 255), 2, cv2.LINE_AA)
+                   0.9, (120, 220, 255), 2, cv2.LINE_AA)
         
         # Draw main text
         cv2.putText(frame, text, (x, y), cv2.FONT_HERSHEY_DUPLEX,
-                   0.95, base_color, 2, cv2.LINE_AA)
+                   0.9, base_color, 2, cv2.LINE_AA)
         
         return frame
 
@@ -233,7 +233,7 @@ class HUDRenderer:
         """
         text = f"FPS: {int(fps)}"
         cv2.putText(frame, text, position, cv2.FONT_HERSHEY_SIMPLEX,
-                   0.85, self.BLUE_NEON, 2, cv2.LINE_AA)
+                   0.8, self.BLUE_NEON, 2, cv2.LINE_AA)
         return frame
 
     def draw_status_panel(self, frame: np.ndarray,
@@ -292,60 +292,3 @@ class HUDRenderer:
         
         cv2.imwrite(filepath, frame)
         return filepath
-
-
-if __name__ == "__main__":
-    # Test HUD rendering
-    print("Testing HUD Renderer...")
-    
-    renderer = HUDRenderer()
-    cap = cv2.VideoCapture(0)
-    start_time = time.time()
-    
-    print("Press ESC to exit, S to save screenshot")
-    
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
-        
-        h, w = frame.shape[:2]
-        
-        # Demo: draw face box in center
-        bbox = (w // 4, h // 4, w // 2, h // 2)
-        frame = renderer.draw_face_box(frame, bbox, glow=True)
-        
-        # Draw emotion info
-        frame = renderer.draw_emotion_info(frame, "Happy", 0.89, 
-                                          "Code Dreamer", bbox, alpha=1.0)
-        
-        # Draw scanline
-        frame = renderer.draw_scanline(frame)
-        
-        # Draw header
-        frame = renderer.draw_glitch_header(frame, "EMOTION DETECTION SYSTEM")
-        
-        # Draw FPS
-        fps = 30
-        frame = renderer.draw_fps_counter(frame, fps)
-        
-        # Draw status
-        status = [
-            "Mode: Heuristic",
-            "DL: OFF",
-            "Press S for screenshot"
-        ]
-        frame = renderer.draw_status_panel(frame, status)
-        
-        cv2.imshow('HUD Renderer Test', frame)
-        
-        key = cv2.waitKey(1) & 0xFF
-        if key == 27:
-            break
-        elif key == ord('s') or key == ord('S'):
-            path = renderer.save_screenshot(frame)
-            print(f"Screenshot saved: {path}")
-    
-    cap.release()
-    cv2.destroyAllWindows()
-    print("Test complete")

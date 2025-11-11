@@ -37,8 +37,8 @@ class FaceDetector:
             static_image_mode=False,
             max_num_faces=max_faces,
             refine_landmarks=refine_landmarks,
-            min_detection_confidence=0.5,
-            min_tracking_confidence=0.5
+            min_detection_confidence=0.6,  # Increased for better detection
+            min_tracking_confidence=0.6     # Increased for smoother tracking
         )
 
     def detect_face(self, frame: np.ndarray) -> Tuple[Optional[Tuple[int, int, int, int]], List[Tuple[int, int]]]:
@@ -84,9 +84,10 @@ class FaceDetector:
             x_coords.append(pixel_x)
             y_coords.append(pixel_y)
 
-        # Calculate bounding box with padding
+        # Calculate tighter bounding box with minimal padding
         if x_coords and y_coords:
-            padding = 15
+            # Use smaller padding for better fit
+            padding = 8
             x_min = max(min(x_coords) - padding, 0)
             y_min = max(min(y_coords) - padding, 0)
             x_max = min(max(x_coords) + padding, width)
@@ -107,6 +108,11 @@ if __name__ == "__main__":
     # Test the face detector
     print("Testing Face Detector...")
     cap = cv2.VideoCapture(0)
+    
+    # Set higher resolution for better quality
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+    
     detector = FaceDetector()
     
     print("Press ESC to exit")

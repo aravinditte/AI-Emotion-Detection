@@ -61,9 +61,22 @@ def main():
             print("  3. Camera permissions are granted")
             return 1
         
-        print("Webcam initialized successfully")
+        # Set higher resolution for better quality
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+        # Increase brightness and contrast
+        cap.set(cv2.CAP_PROP_BRIGHTNESS, 0.5)
+        cap.set(cv2.CAP_PROP_CONTRAST, 0.5)
+        # Set auto focus and exposure
+        cap.set(cv2.CAP_PROP_AUTOFOCUS, 1)
+        cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1)
         
-        # Initialize detector
+        # Get actual resolution
+        actual_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        actual_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        print(f"Webcam initialized at {actual_width}x{actual_height}")
+        
+        # Initialize detector with higher confidence
         print("Loading face detector...")
         detector = FaceDetector(max_faces=1, refine_landmarks=True)
         print("Face detector loaded")
@@ -71,6 +84,8 @@ def main():
         # Initialize emotion analyzer (heuristic mode by default)
         print("Loading emotion analyzer...")
         analyzer = EmotionAnalyzer(mode='heuristic')
+        # Reduce smoothing for more responsive tracking
+        analyzer.bbox_lerp = 0.35  # Increased for faster tracking
         print("Emotion analyzer loaded")
         
         # Initialize HUD renderer
@@ -103,6 +118,9 @@ def main():
         use_dl = False
         dl_backend = analyzer.dl_backend
         
+        # Create window with specific size
+        cv2.namedWindow('AI Emotion Detection', cv2.WINDOW_NORMAL)
+        
         # Main loop
         while True:
             # Read frame
@@ -116,7 +134,7 @@ def main():
             # Detect face
             bbox, landmarks = detector.detect_face(frame)
             
-            # Smooth bounding box movement
+            # Smooth bounding box movement with faster tracking
             if bbox:
                 if smoothed_bbox is None:
                     smoothed_bbox = bbox
@@ -155,7 +173,8 @@ def main():
             
             # Render HUD
             if smoothed_bbox:
-                frame = renderer.draw_face_box(frame, smoothed_bbox, glow=True)
+                # Draw tighter face box
+                frame = renderer.draw_face_box(frame, smoothed_bbox, glow=True, corner_radius=20)
                 frame = renderer.draw_emotion_info(frame, emotion, confidence, 
                                                   persona, smoothed_bbox, alpha)
             
